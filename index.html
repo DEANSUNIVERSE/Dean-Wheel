@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 🍃 | Spatial Machine & GSAP Scroll Engine</title>
+
+<!-- External Fonts: JetBrains Mono & Plus Jakarta Sans -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+:root {
+  --bg: #06070a;
+  --panel: #0d1017;
+  --crimson: #fc3b56;
+  --gold: #d6ad63;
+  --gold-glow: #f2d18a;
+  --charcoal-base: #0a0c12;
+  --charcoal-mid: #121520;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Plus Jakarta Sans', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: auto; background: var(--bg); }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: #e0e4ec;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+.mono { font-family: var(--mono); }
+
+::selection {
+  background: var(--crimson);
+  color: #ffffff;
+}
+
+/* Noise & Technical Background Grid */
+.noise {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 220' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23noise)' opacity='0.55'/%3E%3C/svg%3E");
+  mix-blend-mode: overlay;
+}
+
+.technical-grid {
+  background-image:
+    linear-gradient(to right, rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 8.333vw 8.333vw;
+}
+
+.machined-border {
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.skeuomorphic-btn {
+  background: #ffffff;
+  color: #06070a;
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.skeuomorphic-btn:hover {
+  background: var(--gold-glow);
+  border-color: var(--gold);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(214,173,99,0.3);
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: rgba(13, 16, 23, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.state-line {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Infinite Signal Ticker */
+.signal-band {
+  background: #090b10;
+  color: white;
+  overflow: hidden;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.signal-track {
+  display: flex;
+  gap: 2.5rem;
+  width: max-content;
+  padding: 1.1rem 1.5rem;
+  white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  will-change: transform;
+}
+
+.spec-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.5rem 0.8rem;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: rgba(255,255,255,0.03);
+}
+
+/* Loader Styles */
+.video-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  pointer-events: none;
+  background: #06070a;
+  color: #fff;
+}
+
+.loader-panel {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 0vh;
+  overflow: hidden;
+  background: #111522;
+  transform: translate(-50%, -50%);
+  will-change: width, height, transform, opacity;
+}
+
+.mono-loader-mark {
+  font-family: var(--mono);
+  font-size: clamp(1.2rem, 3vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: 0.25em;
+  color: #fc3b56;
+  opacity: 0;
+  transform: scale(0.85);
+}
+</style>
+</head>
+
+<body class="selection:bg-crimson selection:text-white">
+  <!-- Boot Calibration Overlay -->
+  <div id="loadOverlay" class="video-loader" aria-hidden="true">
+    <div id="loaderPanel" class="loader-panel">
+      <div id="loaderMark" class="mono-loader-mark">
+        𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 🍃
+      </div>
+    </div>
+  </div>
+
+  <!-- Master Header Navigation -->
+  <header class="fixed left-0 top-0 z-[100] w-full border-b border-white/10 bg-[#06070a]/80 backdrop-blur-md">
+    <div class="flex h-16 w-full items-center justify-between px-6 lg:px-12">
+      <a href="#" class="flex items-center gap-3 font-mono font-bold text-sm tracking-wider text-white">
+        <span class="w-2.5 h-2.5 rounded-full bg-crimson shadow-[0_0_8px_#fc3b56]"></span>
+        <span>𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 <span class="text-gold">🍃</span></span>
+      </a>
+
+      <nav class="hidden items-center gap-8 lg:flex font-mono text-[11px] font-bold tracking-widest text-neutral-400">
+        <a href="#philosophy" class="hover:text-white transition-colors">01//PHILOSOPHY</a>
+        <a href="#craft" class="hover:text-white transition-colors">02//CARBON_CRAFT</a>
+        <a href="#system" class="hover:text-white transition-colors">03//SPATIAL_SYSTEM</a>
+        <a href="#models" class="hover:text-white transition-colors">04//COLLECTION</a>
+      </nav>
+
+      <button class="skeuomorphic-btn inline-flex h-9 items-center gap-3 px-5 text-[10px] tracking-wider">
+        <span>Initialize Build</span>
+        <i data-lucide="sliders-horizontal" class="h-3.5 w-3.5"></i>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ========================================================================
+         GSAP 3D PROCEDURAL PINNED SCROLL MACHINE
+    ======================================================================== -->
+    <section id="reveal" class="relative h-[620vh] md:h-[700vh]">
+      <div id="stage" class="sticky top-0 h-screen overflow-hidden bg-black">
+        
+        <!-- Ambient Radial Shading -->
+        <div id="lightLayer" class="absolute inset-0 z-0 bg-[radial-gradient(circle_at_50%_40%,#1a2030_0%,#090c13_50%,#000000_100%)]"></div>
+        <div id="darkLayer" class="absolute inset-0 z-[1] bg-[#040508] opacity-0"></div>
+        
+        <div class="absolute left-1/2 top-[55%] z-[2] h-[74vmin] w-[74vmin] -translate-x-1/2 -translate-y-1/2 machined-border rounded-full opacity-10"></div>
+        
+        <div class="noise pointer-events-none absolute inset-0 z-[60] opacity-40"></div>
+        <div id="grid" class="technical-grid pointer-events-none absolute inset-0 z-[4] opacity-25"></div>
+
+        <!-- Left Vertical Chapter Rail -->
+        <aside class="pointer-events-none absolute left-6 top-32 z-[70] hidden h-[60vh] flex-col justify-between sm:flex font-mono">
+          <div class="absolute left-0 top-0 h-full w-[2px] bg-white/10"></div>
+          <div id="railProgress" class="absolute left-0 top-0 w-[2px] bg-crimson shadow-[0_0_8px_#fc3b56]" style="height: 0%"></div>
+
+          <div data-chapter="0" class="relative pl-6 transition-all duration-300">
+            <span class="absolute left-[-4px] top-1.5 h-2.5 w-2.5 rounded-full bg-crimson"></span>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white">01</p>
+            <p class="text-[9px] uppercase tracking-wider text-neutral-400">Philosophy</p>
+          </div>
+          <div data-chapter="1" class="relative pl-6 transition-all duration-300 opacity-40">
+            <span class="absolute left-[-4px] top-1.5 h-2.5 w-2.5 rounded-full bg-white"></span>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white">02</p>
+            <p class="text-[9px] uppercase tracking-wider text-neutral-400">Carbon Craft</p>
+          </div>
+          <div data-chapter="2" class="relative pl-6 transition-all duration-300 opacity-40">
+            <span class="absolute left-[-4px] top-1.5 h-2.5 w-2.5 rounded-full bg-white"></span>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white">03</p>
+            <p class="text-[9px] uppercase tracking-wider text-neutral-400">Kinetics</p>
+          </div>
+          <div data-chapter="3" class="relative pl-6 transition-all duration-300 opacity-40">
+            <span class="absolute left-[-4px] top-1.5 h-2.5 w-2.5 rounded-full bg-white"></span>
+            <p class="text-[10px] font-bold uppercase tracking-widest text-white">04</p>
+            <p class="text-[9px] uppercase tracking-wider text-neutral-400">Evolution</p>
+          </div>
+        </aside>
+
+        <!-- Centered Procedural 3D SVG Vector Structure -->
+        <div id="productWrap" class="absolute left-1/2 top-1/2 z-20 h-[116vmin] w-[116vmin] drop-shadow-[0_40px_60px_rgba(0,0,0,0.95)]" style="transform-style: preserve-3d;">
+          <svg viewBox="0 0 1200 900" class="h-full w-full overflow-visible" aria-hidden="true">
+            <defs>
+              <radialGradient id="rimCarbon" cx="40%" cy="35%" r="67%">
+                <stop offset="0%" stop-color="#8890a0"></stop>
+                <stop offset="18%" stop-color="#2a3040"></stop>
+                <stop offset="45%" stop-color="#101420"></stop>
+                <stop offset="80%" stop-color="#050608"></stop>
+                <stop offset="100%" stop-color="#fc3b56"></stop>
+              </radialGradient>
+              <linearGradient id="edgeLight" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"></stop>
+                <stop offset="25%" stop-color="#d6ad63" stop-opacity="0.8"></stop>
+                <stop offset="70%" stop-color="#06070a"></stop>
+                <stop offset="100%" stop-color="#fc3b56" stop-opacity="0.8"></stop>
+              </linearGradient>
+              <filter id="heavyShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="15" dy="45" stdDeviation="28" flood-color="#000" flood-opacity="0.9"></feDropShadow>
+              </filter>
+            </defs>
+
+            <!-- Rear Wheel Assembly -->
+            <g id="rearWheel" opacity="0" transform="translate(255 18) scale(.93)" filter="url(#heavyShadow)">
+              <circle cx="420" cy="455" r="284" fill="none" stroke="url(#rimCarbon)" stroke-width="38"></circle>
+              <circle cx="420" cy="455" r="265" fill="none" stroke="#06070a" stroke-width="12"></circle>
+              <circle cx="420" cy="455" r="303" fill="none" stroke="url(#edgeLight)" stroke-width="3.5" opacity=".9"></circle>
+              <g id="spokesRear" stroke="#333846" stroke-width="2.5"></g>
+              <circle cx="420" cy="455" r="34" fill="#06070a" stroke="#d6ad63" stroke-width="2"></circle>
+              <circle cx="420" cy="455" r="14" fill="#fc3b56"></circle>
+            </g>
+
+            <!-- Bike Frame Truss -->
+            <g id="bikeFrame" opacity="0" stroke="#0e1320" stroke-linecap="square" filter="url(#heavyShadow)">
+              <path d="M417 455 L595 285 L760 455 L417 455 L545 455 L595 285" fill="none" stroke-width="20" stroke="#121728"></path>
+              <path d="M595 285 L645 216" stroke-width="15" stroke="#fc3b56"></path>
+              <path d="M645 216 L714 216" stroke-width="13" stroke="#d6ad63"></path>
+              <path d="M760 455 L706 282 L595 285" fill="none" stroke-width="14" stroke="#182036"></path>
+              <rect x="530" y="440" width="30" height="30" fill="#06070a" stroke="#fc3b56" stroke-width="2"></rect>
+            </g>
+
+            <!-- Front Wheel Assembly -->
+            <g id="frontWheel" filter="url(#heavyShadow)">
+              <circle cx="420" cy="455" r="308" fill="none" stroke="url(#rimCarbon)" stroke-width="46"></circle>
+              <circle cx="420" cy="455" r="285" fill="none" stroke="#06070a" stroke-width="14"></circle>
+              <circle cx="420" cy="455" r="331" fill="none" stroke="url(#edgeLight)" stroke-width="4"></circle>
+              <g id="spokesFront" stroke="#4a5568" stroke-width="3"></g>
+
+              <g id="ribTech" opacity="0">
+                <path d="M150 455 C250 420 333 418 420 455 C505 491 590 490 690 455" fill="none" stroke="#fc3b56" stroke-width="8"></path>
+                <path d="M178 398 C283 377 338 390 420 455 C498 520 560 532 660 512" fill="none" stroke="#d6ad63" stroke-width="6"></path>
+              </g>
+
+              <circle cx="420" cy="455" r="48" fill="#06070a" stroke="#2a3040" stroke-width="3"></circle>
+              <circle cx="420" cy="455" r="31" fill="#121624"></circle>
+              <circle cx="420" cy="455" r="14" fill="#fc3b56" stroke="#fff" stroke-width="1"></circle>
+            </g>
+          </svg>
+        </div>
+
+        <!-- Scroll-Pinned Text States -->
+        <div class="pointer-events-none absolute inset-0 z-40">
+          <!-- State 0: Intro -->
+          <section id="state0" class="absolute left-1/2 top-[22%] w-[min(46rem,88vw)] -translate-x-1/2 text-center text-white">
+            <div class="overflow-hidden"><p data-line class="state-line mono text-xs font-bold uppercase tracking-[0.35em] text-gold">𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 // C1 APEX</p></div>
+            <div class="mt-4 overflow-hidden"><h1 data-line class="state-line text-5xl font-extrabold tracking-tight sm:text-7xl leading-[0.95]">Engineered for Pure Velocity.</h1></div>
+            <div class="mx-auto mt-6 max-w-lg overflow-hidden"><p data-line class="state-line text-sm leading-relaxed text-neutral-400">A spatial performance machine developed as one unified system—aerodynamics, carbon layup, and kinetic timeline control working in absolute synchronization.</p></div>
+            <div class="mt-8 flex justify-center overflow-hidden"><a data-line href="#system" class="pointer-events-auto state-line skeuomorphic-btn px-8 py-3.5 text-xs text-black">Explore Platform ↗</a></div>
+          </section>
+
+          <!-- State 1: Philosophy -->
+          <section id="state1" class="absolute right-[8%] top-[24%] w-[min(36rem,82vw)] text-white opacity-0">
+            <div class="overflow-hidden"><p data-line class="state-line mono text-xs font-bold uppercase tracking-widest text-crimson">01 // PHILOSOPHY</p></div>
+            <div class="mt-4 overflow-hidden"><h2 data-line class="state-line text-4xl sm:text-6xl font-extrabold tracking-tight leading-[0.95]">Speed Must Feel Effortless.</h2></div>
+            <div class="mt-5 max-w-sm overflow-hidden"><p data-line class="state-line text-xs sm:text-sm text-neutral-400 leading-relaxed font-mono">From geometrical aerodynamics to structural carbon layup, every parameter is calibrated for sub-millisecond responsiveness.</p></div>
+          </section>
+
+          <!-- State 2: Craft -->
+          <section id="state2" class="absolute left-1/2 top-[20%] w-[min(42rem,86vw)] -translate-x-1/2 text-center text-white opacity-0">
+            <div class="overflow-hidden"><p data-line class="state-line mono text-xs font-bold uppercase tracking-widest text-gold">02 // CARBON MATRIX</p></div>
+            <div class="mt-4 overflow-hidden"><h2 data-line class="state-line text-4xl sm:text-6xl font-extrabold tracking-tight leading-[0.95]">Tuned Carbon Architecture</h2></div>
+            <div class="mx-auto mt-5 max-w-md overflow-hidden"><p data-line class="state-line text-xs sm:text-sm text-neutral-400 leading-relaxed font-mono">High-modulus carbon fibers positioned to balance torsional rigidity, road compliance, and aerodynamic drag.</p></div>
+          </section>
+
+          <!-- State 3: Technology -->
+          <section id="state3" class="absolute left-[8%] top-[28%] w-[min(38rem,84vw)] text-white opacity-0">
+            <div class="overflow-hidden"><p data-line class="state-line mono text-xs font-bold uppercase tracking-widest text-crimson">03 // KINETIC SYSTEM</p></div>
+            <div class="mt-4 overflow-hidden"><h2 data-line class="state-line text-4xl sm:text-6xl font-extrabold tracking-tight leading-[0.95]">One Unified Machine</h2></div>
+            <div class="mt-5 max-w-md overflow-hidden"><p data-line class="state-line text-xs sm:text-sm text-neutral-400 leading-relaxed font-mono">Chassis, wheelsets, and rider ergonomics engineered together so every micro-watt converts into forward motion.</p></div>
+          </section>
+
+          <!-- State 4: Evolution -->
+          <section id="state4" class="absolute left-[8%] top-[24%] w-[min(40rem,84vw)] text-white opacity-0">
+            <div class="overflow-hidden"><p data-line class="state-line mono text-xs font-bold uppercase tracking-widest text-gold">04 // SYNTHESIS</p></div>
+            <div class="mt-4 overflow-hidden"><h2 data-line class="state-line text-5xl sm:text-7xl font-extrabold tracking-tight leading-[0.95]">Dean's C1 APEX</h2></div>
+            <div class="mt-6 max-w-md overflow-hidden"><p data-line class="state-line text-xs sm:text-sm text-neutral-400 leading-relaxed font-mono">A complete performance platform forged for those who command extreme precision without distraction.</p></div>
+            <div class="mt-8 overflow-hidden"><a data-line href="#models" class="pointer-events-auto state-line inline-flex skeuomorphic-btn px-8 py-3.5 text-xs text-black">Configure Artifact ↗</a></div>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         SYSTEM TELEMETRY METRIC STRIP
+    ======================================================================== -->
+    <section class="signal-band" id="system">
+      <div id="signalTrack" class="signal-track">
+        <span class="text-white">𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 C1 APEX</span><span class="text-crimson">✦</span>
+        <span class="text-neutral-400">TUNED CARBON ARCHITECTURE</span><span class="text-gold">✦</span>
+        <span class="text-white">60 FPS GSAP SCROLL ENGINE</span><span class="text-crimson">✦</span>
+        <span class="text-neutral-400">PRECISION GEOMETRY</span><span class="text-gold">✦</span>
+        <span class="text-white">ZERO FRAME HYDRATION JANK</span><span class="text-crimson">✦</span>
+        <span class="text-neutral-400">DEPLOYED CLOUD SCALE</span><span class="text-gold">✦</span>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         PINNED HORIZONTAL SPECIFICATION GALLERY
+    ======================================================================== -->
+    <section id="models" class="py-24 px-6 max-w-7xl mx-auto">
+      <div class="mb-14">
+        <span class="mono text-xs font-bold text-gold uppercase tracking-widest block mb-2">// SPECIFICATION TIERS</span>
+        <h2 class="text-4xl sm:text-6xl font-bold tracking-tight text-white">The Collection Suite</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Spec 01 -->
+        <div class="glass-panel p-8 rounded-xl flex flex-col justify-between hover:border-gold transition-colors">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <span class="mono text-xs text-crimson font-bold">TIER 01 // RACE</span>
+              <span class="mono text-sm text-neutral-500 font-bold">6.8 KG</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white font-mono mb-3">C1 RS APEX</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed font-mono mb-6">
+              Pure aero tube profiles, full integrated internal routing, and responsive carbon chassis for maximum sprint acceleration.
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="spec-chip">Race Layup</span>
+              <span class="spec-chip">Aero Fork</span>
+              <span class="spec-chip">1ms Torque</span>
+            </div>
+          </div>
+          <a href="mailto:epicgameglider@gmail.com" class="mt-8 block text-center py-2.5 rounded bg-white/5 hover:bg-white/10 text-xs font-mono font-bold uppercase tracking-wider text-white transition-all border border-white/10">
+            Request Spec
+          </a>
+        </div>
+
+        <!-- Spec 02 -->
+        <div class="glass-panel p-8 rounded-xl border-2 border-crimson flex flex-col justify-between shadow-[0_0_30px_rgba(252,59,86,0.15)] scale-[1.02]">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <span class="mono text-xs text-gold font-bold">TIER 02 // ALL-ROUND</span>
+              <span class="mono text-sm text-neutral-400 font-bold">7.1 KG</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white font-mono mb-3">C1 ENDURANCE</h3>
+            <p class="text-xs text-neutral-300 leading-relaxed font-mono mb-6">
+              Balanced performance platform built for training, high-speed group rides, and extreme elevation gains with calm handling.
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="spec-chip">Balanced Fit</span>
+              <span class="spec-chip">Endurance Carbon</span>
+              <span class="spec-chip">All-Terrain</span>
+            </div>
+          </div>
+          <a href="mailto:epicgameglider@gmail.com" class="mt-8 block text-center py-2.5 rounded bg-crimson hover:bg-red-600 text-xs font-mono font-bold uppercase tracking-wider text-white transition-all shadow-[0_0_15px_rgba(252,59,86,0.4)]">
+            Commission Build
+          </a>
+        </div>
+
+        <!-- Spec 03 -->
+        <div class="glass-panel p-8 rounded-xl flex flex-col justify-between hover:border-gold transition-colors">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <span class="mono text-xs text-neutral-400 font-bold">TIER 03 // GRAVEL</span>
+              <span class="mono text-sm text-neutral-500 font-bold">7.9 KG</span>
+            </div>
+            <h3 class="text-2xl font-bold text-white font-mono mb-3">C1 GR TERRAIN</h3>
+            <p class="text-xs text-neutral-400 leading-relaxed font-mono mb-6">
+              Durable carbon layup supporting wider 42mm tire clearance, vibration damping rear stays, and extreme off-road control.
+            </p>
+            <div class="flex flex-wrap gap-2">
+              <span class="spec-chip">42mm Clearance</span>
+              <span class="spec-chip">Gravel Frame</span>
+              <span class="spec-chip">Impact Tuned</span>
+            </div>
+          </div>
+          <a href="mailto:epicgameglider@gmail.com" class="mt-8 block text-center py-2.5 rounded bg-white/5 hover:bg-white/10 text-xs font-mono font-bold uppercase tracking-wider text-white transition-all border border-white/10">
+            Request Spec
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Master Footer -->
+    <footer class="bg-black py-16 px-6 lg:px-12 border-t border-white/10 text-neutral-400 font-mono text-xs">
+      <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6">
+        <div>
+          <span class="text-white font-bold tracking-wider uppercase block text-sm">𝕯𝖊𝖆𝖓'𝖘 𝖀𝖓𝖎𝖛𝖊𝖗𝖘𝖊 🍃</span>
+          <span class="text-neutral-500 text-[10px]">&copy; 2026 DINESH YADAV. ALL SYSTEMS OPERATIONAL.</span>
+        </div>
+        <div class="flex items-center gap-6">
+          <a href="https://github.com/DEANSUNIVERSE" target="_blank" class="hover:text-white transition-colors">GITHUB</a>
+          <a href="https://linkedin.com/in/deandev" target="_blank" class="hover:text-white transition-colors">LINKEDIN</a>
+          <a href="mailto:epicgameglider@gmail.com" class="hover:text-white transition-colors">EMAIL</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- ========================================================================
+       GSAP SCROLLTRIGGER ENGINE SCRIPT
+  ======================================================================== -->
+  <script>
+    lucide.createIcons();
+    gsap.registerPlugin(ScrollTrigger);
+
+    const clamp = (val, min = 0, max = 1) => Math.min(max, Math.max(min, val));
+    const lerp = (a, b, t) => a + (b - a) * t;
+    const ease = (t) => 1 - Math.pow(1 - clamp(t), 3);
+    const mapRange = (p, a, b) => clamp((p - a) / (b - a));
+
+    function makeSpokes(target, cx, cy, r, count, offset) {
+      const group = document.getElementById(target);
+      if (!group) return;
+
+      for (let i = 0; i < count; i++) {
+        const angle = ((Math.PI * 2) / count) * i + offset;
+        const hubAngle = angle + (i % 2 === 0 ? 0.18 : -0.18);
+        const x1 = cx + Math.cos(hubAngle) * 34;
+        const y1 = cy + Math.sin(hubAngle) * 34;
+        const x2 = cx + Math.cos(angle) * r;
+        const y2 = cy + Math.sin(angle) * r;
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        group.appendChild(line);
+      }
+    }
+
+    makeSpokes("spokesFront", 420, 455, 284, 24, -0.05);
+    makeSpokes("spokesRear", 420, 455, 260, 24, 0.08);
+
+    const product = document.getElementById("productWrap");
+    const darkLayer = document.getElementById("darkLayer");
+    const rearWheel = document.getElementById("rearWheel");
+    const bikeFrame = document.getElementById("bikeFrame");
+    const ribTech = document.getElementById("ribTech");
+    const rail = document.getElementById("railProgress");
+    const chapters = Array.from(document.querySelectorAll("[data-chapter]"));
+
+    const states = [
+      { el: document.getElementById("state0"), opacity: (p) => clamp(1 - mapRange(p, 0.10, 0.22)) },
+      { el: document.getElementById("state1"), opacity: (p) => (p >= 0.18 && p <= 0.40 ? 1 : 0) },
+      { el: document.getElementById("state2"), opacity: (p) => (p >= 0.38 && p <= 0.58 ? 1 : 0) },
+      { el: document.getElementById("state3"), opacity: (p) => (p >= 0.56 && p <= 0.78 ? 1 : 0) },
+      { el: document.getElementById("state4"), opacity: (p) => mapRange(p, 0.76, 0.90) }
+    ];
+
+    ScrollTrigger.create({
+      trigger: "#reveal",
+      start: "top top",
+      end: "bottom bottom",
+      scrub: 0.5,
+      onUpdate: (self) => {
+        const p = self.progress;
+        rail.style.height = `${p * 100}%`;
+
+        // Update active chapters
+        let activeIdx = 0;
+        if (p >= 0.35 && p < 0.55) activeIdx = 1;
+        if (p >= 0.55 && p < 0.75) activeIdx = 2;
+        if (p >= 0.75) activeIdx = 3;
+
+        chapters.forEach((ch, idx) => {
+          ch.style.opacity = idx === activeIdx ? 1 : 0.4;
+        });
+
+        // Update State Texts
+        states.forEach(st => {
+          const op = st.opacity(p);
+          st.el.style.opacity = op;
+          st.el.style.pointerEvents = op > 0.05 ? "auto" : "none";
+        });
+
+        // 3D Procedural Transform Keyframes
+        const s = lerp(0.85, 1.25, Math.sin(p * Math.PI));
+        const rx = p * 60;
+        const ry = p * 85;
+        const tx = (p - 0.5) * 35;
+        product.style.transform = `translate3d(calc(-50% + ${tx}vw), -50%, 0) rotateX(${rx}deg) rotateY(${ry}deg) scale(${s})`;
+
+        rearWheel.style.opacity = p > 0.45 ? 1 : (p - 0.2) / 0.25;
+        bikeFrame.style.opacity = p > 0.65 ? 1 : (p - 0.4) / 0.25;
+        ribTech.style.opacity = p > 0.6 ? 1 : 0;
+        darkLayer.style.opacity = p * 0.8;
+      }
+    });
+
+    // Simulated Boot Sequence
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        const overlay = document.getElementById('loadOverlay');
+        overlay.style.transition = 'opacity 0.6s ease';
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.remove(), 600);
+      }, 1200);
+    });
+  </script>
+</body>
+</html>
